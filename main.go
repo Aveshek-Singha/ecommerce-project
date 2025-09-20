@@ -38,6 +38,43 @@ func getProducts(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(productList)
 }
 
+func createProduct(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Error(w, "Plz give me POST request", 400)
+		return
+	}
+
+	var newProduct Product
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&newProduct)
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Plz give me valid json", 400)
+		return
+	}
+
+	newProduct.ID = len(productList) + 1
+
+	productList = append(productList, newProduct)
+
+	w.WriteHeader(201)
+
+	encoder := json.NewEncoder(w)
+	encoder.Encode(newProduct)
+}
+
 func main() {
 	mux := http.NewServeMux() //router
 
@@ -46,6 +83,9 @@ func main() {
 	mux.HandleFunc("/about", aboutHandler) // route
 
 	mux.HandleFunc("/products", getProducts)
+
+	mux.HandleFunc("/create-products", createProduct)
+
 	fmt.Println("Server running on :3000")
 
 	err := http.ListenAndServe(":3000", mux) // "Failed to start the server"
