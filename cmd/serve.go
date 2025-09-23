@@ -1,24 +1,24 @@
 package cmd
 
 import (
-	handler "ecommerice-project/handlers"
+	"ecommerice-project/middleware"
 	"ecommerice-project/util"
 	"fmt"
 	"net/http"
 )
 
 func Serve() {
-	mux := http.NewServeMux() //router
+	manager := middleware.NewManager()
 
-	mux.Handle("GET /products", http.HandlerFunc(handler.GetProducts))
+	manager.Use(middleware.Logger, middleware.Hudai)
 
-	mux.Handle("POST /products", http.HandlerFunc(handler.CreateProduct))
+	mux := http.NewServeMux()
 
-	mux.Handle("GET /products/{productId}", http.HandlerFunc(handler.GetProductById))
-
-	fmt.Println("Server running on :3000")
+	initRoutes(mux, manager)
 
 	globalRouter := util.GlobalRouter(mux)
+
+	fmt.Println("Server running on :3000")
 
 	err := http.ListenAndServe(":3000", globalRouter) // "Failed to start the server"
 	if err != nil {
